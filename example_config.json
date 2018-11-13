@@ -1,0 +1,12 @@
+{
+  "app_id": "123",
+  "access_token": "123",
+  "mapquest_key": "123",
+  "openweathermap_key": "123",
+  "newsapi_key": "123",
+  "yandex_translate_key": "123",
+  "amazon_polly_secret": "123",
+  "amazon_polly_access_key_id": "123",
+  "amazon_polly_region": "eu-central-1",
+  "amazon_polly_name": "Maxim"
+}

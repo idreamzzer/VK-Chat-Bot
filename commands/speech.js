@@ -6,14 +6,13 @@ const AWS = require("aws-sdk");
 const removeTag = require("../helpers/removeTag");
 const vkbot = require("../vkbot");
 const logger = require("../utils/logger");
+
 let AWSconfig = {
   accessKeyId: config.amazon_polly_access_key_id,
   secretAccessKey: config.amazon_polly_secret,
-  region: "eu-central-1"
+  region: config.amazon_polly_region
 };
 AWS.config.update(AWSconfig);
-const pollyName = "Maxim";
-
 const polly = new AWS.Polly();
 
 module.exports = async ctx => {
@@ -39,7 +38,7 @@ function downloadSpeechFromText(text) {
       OutputFormat: "mp3",
       Text: text,
       TextType: "text",
-      VoiceId: pollyName
+      VoiceId: config.amazon_polly_name
     };
     polly.synthesizeSpeech(params, function(err, data) {
       if (err) {
