@@ -30,8 +30,11 @@ module.exports = {
       });
     });
   },
-  openStream: (filename = defaultTempFileName) => {
-    return fs.createReadStream(path.join(tempFilesDirectory, filename));
+  createReadStream: (fileName = defaultTempFileName) => {
+    return fs.createReadStream(path.join(tempFilesDirectory, fileName));
+  },
+  createWriteStream: (fileName = defaultTempFileName) => {
+    return fs.createWriteStream(path.join(tempFilesDirectory, fileName));
   },
   delete: (fileName = defaultTempFileName) => {
     return new Promise((resolve, reject) => {

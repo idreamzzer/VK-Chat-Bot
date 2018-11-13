@@ -25,7 +25,7 @@ module.exports = async ctx => {
     // Get url for upload in vk servers
     const urlForUploadData = await getUrlForUpload(ctx.peer_id);
     // Create stream for temp file
-    const fileStream = tempFileHandler.openStream(tempFileName);
+    const fileStream = tempFileHandler.createReadStream(tempFileName);
     // Upload file to vk by url
     const uploadedData = await uploadToVkByUploadUrl(
       urlForUploadData.data.upload_url,
