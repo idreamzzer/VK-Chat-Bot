@@ -1,7 +1,6 @@
 const request = require("request");
 const config = require("../config.json");
-const fs = require("fs");
-const path = require("path");
+const tempFileHandler = require("../helpers/tempFileHandler");
 const AWS = require("aws-sdk");
 const removeTag = require("../helpers/removeTag");
 const vkbot = require("../vkbot");
@@ -14,18 +13,31 @@ let AWSconfig = {
 };
 AWS.config.update(AWSconfig);
 const polly = new AWS.Polly();
+const tempFileName = "tempSpeech.mp3";
 
 module.exports = async ctx => {
   let text = removeTag(ctx.body);
   try {
-    await downloadSpeechFromText(text);
+    // Download speech data
+    const speechData = await downloadSpeechFromText(text);
+    // Save speech data in temp file
+    await tempFileHandler.create(tempFileName, speechData.AudioStream);
+    // Get url for upload in vk servers
     const urlForUploadData = await getUrlForUpload(ctx.peer_id);
+    // Create stream for temp file
+    const fileStream = tempFileHandler.openStream(tempFileName);
+    // Upload file to vk by url
     const uploadedData = await uploadToVkByUploadUrl(
-      urlForUploadData.data.upload_url
+      urlForUploadData.data.upload_url,
+      fileStream
     );
+    // Delete temp file
+    await tempFileHandler.delete(tempFileName);
+    // Save uploaded in vk server file in docs
     const savedData = await saveAudioFileInVk(JSON.parse(uploadedData));
     const { owner_id, id } = savedData.data[0];
     let attachment = `doc${owner_id}_${id}`;
+    // Reply with saved doc file
     ctx.reply("", { attachment });
   } catch (error) {
     logger.error(error);
@@ -45,17 +57,8 @@ function downloadSpeechFromText(text) {
         logger.error(err, err.stack);
         reject(err);
       } else {
-        fs.writeFile(
-          path.join(__dirname, "../media/", "tempSpeech.mp3"),
-          data.AudioStream,
-          function(err) {
-            if (err) {
-              logger.error(err);
-              reject(err);
-            }
-            resolve();
-          }
-        );
+        logger.debug("Downloaded speech");
+        resolve(data);
       }
     });
   });
@@ -75,13 +78,14 @@ function getUrlForUpload(peer_id) {
           logger.error(err);
           reject(err);
         }
+        logger.debug("Got url for upload");
         resolve(response);
       }
     );
   });
 }
 
-function uploadToVkByUploadUrl(upload_url) {
+function uploadToVkByUploadUrl(upload_url, file) {
   let options = {
     uri: upload_url,
     method: "POST",
@@ -89,9 +93,7 @@ function uploadToVkByUploadUrl(upload_url) {
       "Content-Type": "multipart/form-data"
     },
     formData: {
-      file: [
-        fs.createReadStream(path.join(__dirname, "../media/", "tempSpeech.mp3"))
-      ]
+      file: [file]
     }
   };
   return new Promise((resolve, reject) => {
@@ -100,6 +102,7 @@ function uploadToVkByUploadUrl(upload_url) {
         logger.error(err);
         reject(err);
       } else {
+        logger.debug("Uploaded file to vk");
         resolve(body);
       }
     });
@@ -119,6 +122,7 @@ function saveAudioFileInVk(data) {
         logger.error(err);
         reject(err);
       }
+      logger.debug("Saved file in vk docs");
       resolve(response);
     });
   });
