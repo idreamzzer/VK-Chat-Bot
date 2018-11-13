@@ -1,6 +1,7 @@
 ### About
 
 Simple VK chat bot based on [node-vk-bot-api](https://github.com/node-vk-bot-api/node-vk-bot-api).
+
 ![Screenshot](/screenshot.jpg)
 
 ### Installation
